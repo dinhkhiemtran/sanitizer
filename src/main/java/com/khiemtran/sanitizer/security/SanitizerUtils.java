@@ -1,6 +1,8 @@
 package com.khiemtran.sanitizer.security;
 
 import org.owasp.encoder.Encode;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 import org.springframework.web.util.HtmlUtils;
 
 import java.nio.file.Path;
@@ -15,6 +17,23 @@ public class SanitizerUtils {
   public static String sanitizeString(String untrustedString) {
     return Optional.of(Encode.forHtmlContent(HtmlUtils
         .htmlEscape(untrustedString))).orElse(null);
+  }
+
+  public static String sanitizeHTML(String untrustedHTML) {
+    PolicyFactory policyFactory = new HtmlPolicyBuilder()
+        .allowAttributes("href").onElements("a")
+        .allowAttributes("title").globally()
+        .allowElements("table", "td", "tbody", "th", "tr", "a", "pre", "figure")
+        .allowElements("img")
+        .allowAttributes("src").onElements("img")
+        .allowAttributes("class").onElements("span", "code", "figure")
+        .allowTextIn("span", "pre", "code")
+        .allowUrlProtocols("data")
+        .allowCommonInlineFormattingElements()
+        .allowCommonBlockElements()
+        .allowStyling()
+        .toFactory();
+    return policyFactory.sanitize(untrustedHTML);
   }
 
   public static List<String> sanitizeStringList(List<String> untrustedListString) {
